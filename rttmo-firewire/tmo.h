@@ -40,8 +40,8 @@ void makehdr2log(Mat* im1, Mat* im3, Mat* hdr);
  * it was stopped from a callback function and PFSTMO_ERROR if an
  * error was encountered.
  */
-int tmo_mantiuk06_contmap( int c, int r, float* R, float* G, float* B, float* Y,
-						   float contrastFactor, float saturationFactor, float detailFactor, bool bcg,
-						   int itmax = 50, float tol = 1e-2);
+int tmo_mantiuk06_contmap(int c, int r, float* R, float* G, float* B, float* Y,
+                          float contrastFactor, float saturationFactor, float detailFactor, bool bcg,
+                          int itmax = 50, float tol = 1e-2);
 
 #endif // __TMO_H__

@@ -7,163 +7,163 @@ GuppyCam::GuppyCam() {}
 GuppyCam::~GuppyCam() {}
 
 int GuppyCam::connect() {
-	try {
-		Camera::DCam::scanCameras();
-	} catch (std::exception) {
-		camconnected = 0;
-		//return 0;
-		printf("Error connecting to camera \n");
-		exit(-1);
-	}
+    try {
+        Camera::DCam::scanCameras();
+    } catch (std::exception) {
+        camconnected = 0;
+        //return 0;
+        printf("Error connecting to camera \n");
+        exit(-1);
+    }
 
-	std::vector<Camera::DCam*> cam = Camera::DCam::availableCameras();
-	if (cam.empty()) {
-		printf("Error connecting to camera \n");
-		exit(-1);
-	}
+    std::vector<Camera::DCam*> cam = Camera::DCam::availableCameras();
+    if (cam.empty()) {
+        printf("Error connecting to camera \n");
+        exit(-1);
+    }
 
-	_dcam = cam[0];
-	_dcam->open();
-	_camera = _dcam->camera();
+    _dcam = cam[0];
+    _dcam->open();
+    _camera = _dcam->camera();
 
-	if (_dcam->is_open()) {
-		camconnected = 1;
-		return 1;
-	} else {
-		camconnected = 0;
-		//return 0;
-		printf("Error connecting to camera \n");
-		exit(-1);
-	}
+    if (_dcam->is_open()) {
+        camconnected = 1;
+        return 1;
+    } else {
+        camconnected = 0;
+        //return 0;
+        printf("Error connecting to camera \n");
+        exit(-1);
+    }
 }
 
 int GuppyCam::isValid() {
-	return camconnected;
+    return camconnected;
 }
 
 bool GuppyCam::GrabCvImage(IplImage* img) {
-	if (_dcam->read_frame() == 0) { return false; }
-	cvCopy(_dcam->read_frame(), img);
-	return true;
+    if (_dcam->read_frame() == 0) { return false; }
+    cvCopy(_dcam->read_frame(), img);
+    return true;
 }
 
 
 void GuppyCam::setExposure(int value) {
 
-	uint32_t v;
-	if (value < 0) { v = 0; }
-	else { v = value; }
+    uint32_t v;
+    if (value < 0) { v = 0; }
+    else { v = value; }
 
-	if (v < expMin) {
-		v = expMin;
-	}
-	if (v > expMax) {
-		v = expMax;
-	}
+    if (v < expMin) {
+        v = expMin;
+    }
+    if (v > expMax) {
+        v = expMax;
+    }
 
-	dc1394_feature_set_value(_camera, DC1394_FEATURE_EXPOSURE, v);
+    dc1394_feature_set_value(_camera, DC1394_FEATURE_EXPOSURE, v);
 
-	printf("exposure: %d [%d,%d]\n", v, expMin, expMax);
+    printf("exposure: %d [%d,%d]\n", v, expMin, expMax);
 }
 
 void GuppyCam::setGain(int value) {
-	uint32_t v;
-	if (value < 0) { v = 0; }
-	else { v = value; }
+    uint32_t v;
+    if (value < 0) { v = 0; }
+    else { v = value; }
 
-	if (v < gainMin) {
-		v = gainMin;
-	}
-	if (v > gainMax) {
-		v = gainMax;
-	}
+    if (v < gainMin) {
+        v = gainMin;
+    }
+    if (v > gainMax) {
+        v = gainMax;
+    }
 
-	_feature = DC1394_FEATURE_GAIN;
-	if ( DC1394_SUCCESS != dc1394_feature_set_value(_camera, _feature, v)) {
-		printf("error setting gain \n");
-	}
+    _feature = DC1394_FEATURE_GAIN;
+    if (DC1394_SUCCESS != dc1394_feature_set_value(_camera, _feature, v)) {
+        printf("error setting gain \n");
+    }
 
-	printf("gain: %d [%d,%d]\n", v, gainMin, gainMax);
+    printf("gain: %d [%d,%d]\n", v, gainMin, gainMax);
 }
 
 void GuppyCam::setShutter(int value) {
-	uint32_t v;
-	if (value < 0) { v = 0; }
-	else { v = value; }
+    uint32_t v;
+    if (value < 0) { v = 0; }
+    else { v = value; }
 
-	if (v < shutMin) {
-		v = shutMin;
-	}
-	if (v > shutMax) {
-		v = shutMax;
-	}
+    if (v < shutMin) {
+        v = shutMin;
+    }
+    if (v > shutMax) {
+        v = shutMax;
+    }
 
-	_feature = DC1394_FEATURE_SHUTTER;
-	if ( DC1394_SUCCESS != dc1394_feature_set_value(_camera, _feature, v)) {
-		printf("error setting shutter \n");
-	}
+    _feature = DC1394_FEATURE_SHUTTER;
+    if (DC1394_SUCCESS != dc1394_feature_set_value(_camera, _feature, v)) {
+        printf("error setting shutter \n");
+    }
 
-	printf("shutter: %d [%d,%d]\n", v, shutMin, shutMax);
+    printf("shutter: %d [%d,%d]\n", v, shutMin, shutMax);
 }
 
 void GuppyCam::setGamma(int value) {
-	_feature = DC1394_FEATURE_GAMMA;
-	if ( DC1394_SUCCESS != dc1394_feature_set_value(_camera, _feature, value)) {
-		printf("error setting gamma \n");
-	}
+    _feature = DC1394_FEATURE_GAMMA;
+    if (DC1394_SUCCESS != dc1394_feature_set_value(_camera, _feature, value)) {
+        printf("error setting gamma \n");
+    }
 }
 
 void GuppyCam::setWhiteBalance(uint32_t red, uint32_t blue) {
-	_feature = DC1394_FEATURE_WHITE_BALANCE;
-	if ( DC1394_SUCCESS !=  dc1394_feature_whitebalance_set_value(_camera, blue, red)) {
-		printf("error setting whitebalance \n");
-	}
+    _feature = DC1394_FEATURE_WHITE_BALANCE;
+    if (DC1394_SUCCESS !=  dc1394_feature_whitebalance_set_value(_camera, blue, red)) {
+        printf("error setting whitebalance \n");
+    }
 
 }
 
 void GuppyCam::setAutoWhiteBalance(bool useauto) {
-	dc1394feature_mode_t mode;
-	if (useauto)	{ mode = DC1394_FEATURE_MODE_AUTO; }
-	else { mode = DC1394_FEATURE_MODE_MANUAL; }
+    dc1394feature_mode_t mode;
+    if (useauto)	{ mode = DC1394_FEATURE_MODE_AUTO; }
+    else { mode = DC1394_FEATURE_MODE_MANUAL; }
 
-	_feature = DC1394_FEATURE_WHITE_BALANCE;
-	if ( DC1394_SUCCESS !=  dc1394_feature_set_mode(_camera, _feature, mode)) {
-		printf("error setting auto wb \n");
-	}
+    _feature = DC1394_FEATURE_WHITE_BALANCE;
+    if (DC1394_SUCCESS !=  dc1394_feature_set_mode(_camera, _feature, mode)) {
+        printf("error setting auto wb \n");
+    }
 
 }
 
 void GuppyCam::setAllAuto(bool useauto) {
-	dc1394feature_mode_t mode;
-	if (useauto)	{ mode = DC1394_FEATURE_MODE_AUTO; }
-	else { mode = DC1394_FEATURE_MODE_MANUAL; }
+    dc1394feature_mode_t mode;
+    if (useauto)	{ mode = DC1394_FEATURE_MODE_AUTO; }
+    else { mode = DC1394_FEATURE_MODE_MANUAL; }
 
-	_feature =  DC1394_FEATURE_SHUTTER;
-	if ( DC1394_SUCCESS !=  dc1394_feature_set_mode(_camera, _feature, mode)) {
-		printf("error setting auto shutter \n");
-	}
+    _feature =  DC1394_FEATURE_SHUTTER;
+    if (DC1394_SUCCESS !=  dc1394_feature_set_mode(_camera, _feature, mode)) {
+        printf("error setting auto shutter \n");
+    }
 
-	_feature =  DC1394_FEATURE_GAIN;
-	if ( DC1394_SUCCESS !=  dc1394_feature_set_mode(_camera, _feature, mode)) {
-		printf("error setting auto gain \n");
-	}
+    _feature =  DC1394_FEATURE_GAIN;
+    if (DC1394_SUCCESS !=  dc1394_feature_set_mode(_camera, _feature, mode)) {
+        printf("error setting auto gain \n");
+    }
 
-	_feature = DC1394_FEATURE_EXPOSURE;
-	if ( DC1394_SUCCESS !=  dc1394_feature_set_mode(_camera, _feature, mode)) {
-		printf("error setting auto exposure \n");
-	}
+    _feature = DC1394_FEATURE_EXPOSURE;
+    if (DC1394_SUCCESS !=  dc1394_feature_set_mode(_camera, _feature, mode)) {
+        printf("error setting auto exposure \n");
+    }
 
 }
 
 void GuppyCam::loadSettings() {
 
-	// get min max
-	dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_EXPOSURE, &expMin, &expMax);
-	dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_GAIN, &gainMin, &gainMax);
-	dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_SHUTTER, &shutMin, &shutMax);
+    // get min max
+    dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_EXPOSURE, &expMin, &expMax);
+    dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_GAIN, &gainMin, &gainMax);
+    dc1394_feature_get_boundaries(_camera, DC1394_FEATURE_SHUTTER, &shutMin, &shutMax);
 
-	// for now use auto
-	setAllAuto(true);
+    // for now use auto
+    setAllAuto(true);
 
 
 

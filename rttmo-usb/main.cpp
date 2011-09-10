@@ -36,67 +36,96 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
     else { im1.convertTo(hdr, CV_32FC3); }
 
     /////////////////////////
+    if (1) {
 
-    Mat luv( hdr.rows, hdr.cols, CV_32FC3 );
-    cvtColor(hdr, luv, CV_BGR2YCrCb);
+        Mat luv(hdr.rows, hdr.cols, CV_32FC3);
+        cvtColor(hdr, luv, CV_BGR2YCrCb);
 
+        vector<Mat> lplanes;
+        split(luv, lplanes);
+        Mat Y(hdr.rows, hdr.cols, CV_32FC1);
+        lplanes[0].convertTo(Y, CV_32FC1);
 
-    vector<Mat> lplanes;
-    split(luv, lplanes);
-    Mat Y(hdr.rows, hdr.cols, CV_32FC1);
-    lplanes[0].convertTo(Y, CV_32FC1);
+        /////////////////////////
 
+        vector<Mat> cplanes;
+        split(hdr, cplanes);
+        Mat R(hdr.rows, hdr.cols, CV_32FC1);
+        cplanes[0].convertTo(R, CV_32FC1);
+        Mat G(hdr.rows, hdr.cols, CV_32FC1);
+        cplanes[1].convertTo(G, CV_32FC1);
+        Mat B(hdr.rows, hdr.cols, CV_32FC1);
+        cplanes[2].convertTo(B, CV_32FC1);
 
+        bool bcg = false;
+        int itmax = 256 * 3;
+        float tol = 5e-2;
+        int cols = hdr.cols;
+        int rows = hdr.rows;
+
+        float contrast = (m_contrast) ? 0.11 : -0.11 ;
+        float saturation = (m_saturation) ? 1.5 : 1.0 ;
+        float detail = (m_detail) ? 2.0 : 1.0 ;
+
+        float* fR = (float*)R.data;
+        float* fG = (float*)G.data;
+        float* fB = (float*)B.data;
+        float* fY = (float*)Y.data;
+
+        tmo_mantiuk06_contmap(cols, rows,
+                              fR,
+                              fG,
+                              fB,
+                              fY,
+                              contrast, saturation, detail, bcg, itmax, tol);
+
+        Mat rgb[] = {R, G, B};
+        merge(rgb, 3, hdr);
+
+    } else {
+
+        Mat xyz(hdr.rows, hdr.cols, CV_32FC3);
+        cvtColor(hdr, xyz, CV_BGR2XYZ);
+
+        vector<Mat> lplanes;
+        split(xyz, lplanes);
+        Mat Y(hdr.rows, hdr.cols, CV_32FC1);
+        Mat X(hdr.rows, hdr.cols, CV_32FC1);
+        Mat Z(hdr.rows, hdr.cols, CV_32FC1);
+        lplanes[1].convertTo(Y, CV_32FC1);
+        lplanes[0].convertTo(X, CV_32FC1);
+        lplanes[2].convertTo(Z, CV_32FC1);
+
+        /////////////////////////
+
+        float bias = 0.95;  // 0.85;
+        int width = hdr.cols;
+        int height = hdr.rows;
+        Mat L(hdr.rows, hdr.cols, CV_32FC1);
+        float* fY = (float*)Y.data;
+        float* fL = (float*)L.data;
+
+        tmo_drago03(width, height,
+                    fY,
+                    fL,
+                    bias);
+
+        Mat scale(hdr.rows, hdr.cols, CV_32FC1);
+        divide(L, Y, scale);
+        multiply(Y, scale, Y);
+        multiply(X, scale, X);
+        multiply(Z, scale, Z);
+
+        Mat rgb[] = {X, Y, Z};
+        merge(rgb, 3, hdr);
+        cvtColor(hdr, hdr, CV_XYZ2BGR);
+
+    }
     /////////////////////////
 
-    vector<Mat> cplanes;
-    split(hdr, cplanes);
-    Mat R(hdr.rows, hdr.cols, CV_32FC1);
-    cplanes[0].convertTo(R, CV_32FC1);
-    Mat G(hdr.rows, hdr.cols, CV_32FC1);
-    cplanes[1].convertTo(G, CV_32FC1);
-    Mat B(hdr.rows, hdr.cols, CV_32FC1);
-    cplanes[2].convertTo(B, CV_32FC1);
-
-    /////////////////////////
-
-    bool bcg = false;
-    int itmax = 256*3;
-    float tol = 5e-2;
-    int cols = hdr.cols;
-    int rows = hdr.rows;
-
-    float contrast = (m_contrast) ? 0.11 : -0.11 ;
-    float saturation = (m_saturation) ? 1.5 : 1.0 ;
-    float detail = (m_detail) ? 2.0 : 1.0 ;
-
-    MSG("cont %f", contrast);
-    MSG("sat %f", saturation);
-    MSG("detail %f", detail);
-
-    float* fR = (float*)R.data;
-    float* fG = (float*)G.data;
-    float* fB = (float*)B.data;
-    float* fY = (float*)Y.data;
-
-    MSG("tonemapping...");
-
-    tmo_mantiuk06_contmap(cols, rows,
-                          fR,
-                          fG,
-                          fB,
-                          fY,
-                          contrast, saturation, detail, bcg, itmax, tol);
-
-    Mat rgb[] = {R, G, B};
-    merge(rgb, 3, hdr);
-
+//    hdr *= 255;
     MSG("done.");
-
-    /////////////////////////
-
     imshow("tmo", hdr);
-
     m_init = 1;
 }
 
@@ -137,7 +166,7 @@ int main(int argc, char** argv) {
         while (1) {
             char key;
             key = (char) cvWaitKey(10);
-            if ( key == 27 || key == 'q' || key == 'Q' ) { break; }
+            if (key == 27 || key == 'q' || key == 'Q') { break; }
         }
 
         /////////////////////////
@@ -146,21 +175,21 @@ int main(int argc, char** argv) {
 
     } else {
         string s = argv[1];
-        if (s.compare(string("u")) == 0 ) { m_live_usb = 1; }
+        if (s.compare(string("u")) == 0) { m_live_usb = 1; }
         else { m_live_usb = 0; }
 
 
         namedWindow("trackbar", CV_WINDOW_KEEPRATIO);
-        createTrackbar( "contrast", "trackbar", &m_contrast, SLIDER_MAX, 0 );
-        createTrackbar( "saturation", "trackbar", &m_saturation, SLIDER_MAX, 0 );
-        createTrackbar( "detail", "trackbar", &m_detail, SLIDER_MAX, 0 );
+        createTrackbar("contrast", "trackbar", &m_contrast, SLIDER_MAX, 0);
+        createTrackbar("saturation", "trackbar", &m_saturation, SLIDER_MAX, 0);
+        createTrackbar("detail", "trackbar", &m_detail, SLIDER_MAX, 0);
 
         // camera setup
         Mat cimage;
         VideoCapture  capture;
 
         if (!m_live_usb) {
-            capture.open( argv[1] );
+            capture.open(argv[1]);
         } else {
             int w = 320 / 2;
             int h = 240 / 2;
@@ -186,7 +215,7 @@ int main(int argc, char** argv) {
 
             // get camera image
             capture >> cimage;
-            if ( cimage.empty() ) {
+            if (cimage.empty()) {
                 cout << "Couldn't load " << endl;
                 continue;
             }
@@ -240,7 +269,7 @@ int main(int argc, char** argv) {
             // quit?
             char key;
             key = (char) cvWaitKey(10);
-            if ( key == 27 || key == 'q' || key == 'Q' ) { break; }
+            if (key == 27 || key == 'q' || key == 'Q') { break; }
 
 
             m_init = 1;

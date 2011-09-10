@@ -40,8 +40,41 @@ void makehdr2log(Mat* im1, Mat* im3, Mat* hdr);
  * it was stopped from a callback function and PFSTMO_ERROR if an
  * error was encountered.
  */
-int tmo_mantiuk06_contmap( int c, int r, float* R, float* G, float* B, float* Y,
-						   float contrastFactor, float saturationFactor, float detailFactor, bool bcg,
-						   int itmax = 50, float tol = 1e-2);
+int tmo_mantiuk06_contmap(int c, int r, float* R, float* G, float* B, float* Y,
+                          float contrastFactor, float saturationFactor, float detailFactor, bool bcg,
+                          int itmax = 50, float tol = 1e-2);
+
+
+
+
+
+
+/**
+ * @brief Frederic Drago Logmapping Algorithm
+ *
+ * Implementation obtained from source code provided
+ * by Frederic Drago on 16 May 2003.
+ *
+ * @param width image width
+ * @param height image height
+ * @param Y [in] image luminance values
+ * @param L [out] tone mapped values
+ * @param maxLum maximum luminance in the image
+ * @param avLum logarithmic average of luminance in the image
+ * @param bias bias parameter of tone mapping algorithm (eg 0.85)
+ */
+
+void tmo_drago03(unsigned int width, unsigned int height,
+                 const float* Y, float* L,
+                 float bias);
+
+/**
+ * @brief Find average and maximum luminance in an image
+ *
+ * @param Y [in] image luminance values
+ * @param avLum [out] average luminance
+ * @param maxLum [out] maximum luminance
+ */
+void calculateLuminance(unsigned int width, unsigned int height, const float* Y, float& avLum, float& maxLum);
 
 #endif // __TMO_H__

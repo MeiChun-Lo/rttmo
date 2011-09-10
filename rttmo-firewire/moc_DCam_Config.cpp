@@ -19,23 +19,23 @@
 QT_BEGIN_MOC_NAMESPACE
 static const uint qt_meta_data_DCam_Feature[] = {
 
- // content:
-       5,       // revision
-       0,       // classname
-       0,    0, // classinfo
-       3,   14, // methods
-       0,    0, // properties
-       0,    0, // enums/sets
-       0,    0, // constructors
-       0,       // flags
-       0,       // signalCount
+// content:
+    5,       // revision
+    0,       // classname
+    0,    0, // classinfo
+    3,   14, // methods
+    0,    0, // properties
+    0,    0, // enums/sets
+    0,    0, // constructors
+    0,       // flags
+    0,       // signalCount
 
- // slots: signature, parameters, type, tag, flags
-      17,   14,   13,   13, 0x09,
-      42,   36,   13,   13, 0x09,
-      63,   36,   13,   13, 0x09,
+// slots: signature, parameters, type, tag, flags
+    17,   14,   13,   13, 0x09,
+    42,   36,   13,   13, 0x09,
+    63,   36,   13,   13, 0x09,
 
-       0        // eod
+    0        // eod
 };
 
 static const char qt_meta_stringdata_DCam_Feature[] = {
@@ -45,32 +45,31 @@ static const char qt_meta_stringdata_DCam_Feature[] = {
 };
 
 const QMetaObject DCam_Feature::staticMetaObject = {
-    { &QObject::staticMetaObject, qt_meta_stringdata_DCam_Feature,
-      qt_meta_data_DCam_Feature, 0 }
+    {
+        &QObject::staticMetaObject, qt_meta_stringdata_DCam_Feature,
+        qt_meta_data_DCam_Feature, 0
+    }
 };
 
 #ifdef Q_NO_DATA_RELOCATION
-const QMetaObject &DCam_Feature::getStaticMetaObject() { return staticMetaObject; }
+const QMetaObject& DCam_Feature::getStaticMetaObject() { return staticMetaObject; }
 #endif //Q_NO_DATA_RELOCATION
 
-const QMetaObject *DCam_Feature::metaObject() const
-{
+const QMetaObject* DCam_Feature::metaObject() const {
     return QObject::d_ptr->metaObject ? QObject::d_ptr->metaObject : &staticMetaObject;
 }
 
-void *DCam_Feature::qt_metacast(const char *_clname)
-{
-    if (!_clname) return 0;
+void* DCam_Feature::qt_metacast(const char* _clname) {
+    if (!_clname) { return 0; }
     if (!strcmp(_clname, qt_meta_stringdata_DCam_Feature))
-        return static_cast<void*>(const_cast< DCam_Feature*>(this));
+        { return static_cast<void*>(const_cast< DCam_Feature*>(this)); }
     return QObject::qt_metacast(_clname);
 }
 
-int DCam_Feature::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
-{
+int DCam_Feature::qt_metacall(QMetaObject::Call _c, int _id, void** _a) {
     _id = QObject::qt_metacall(_c, _id, _a);
     if (_id < 0)
-        return _id;
+        { return _id; }
     if (_c == QMetaObject::InvokeMetaMethod) {
         switch (_id) {
         case 0: auto_changed((*reinterpret_cast< bool(*)>(_a[1]))); break;
@@ -84,18 +83,18 @@ int DCam_Feature::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
 }
 static const uint qt_meta_data_DCam_Config[] = {
 
- // content:
-       5,       // revision
-       0,       // classname
-       0,    0, // classinfo
-       0,    0, // methods
-       0,    0, // properties
-       0,    0, // enums/sets
-       0,    0, // constructors
-       0,       // flags
-       0,       // signalCount
+// content:
+    5,       // revision
+    0,       // classname
+    0,    0, // classinfo
+    0,    0, // methods
+    0,    0, // properties
+    0,    0, // enums/sets
+    0,    0, // constructors
+    0,       // flags
+    0,       // signalCount
 
-       0        // eod
+    0        // eod
 };
 
 static const char qt_meta_stringdata_DCam_Config[] = {
@@ -103,32 +102,31 @@ static const char qt_meta_stringdata_DCam_Config[] = {
 };
 
 const QMetaObject DCam_Config::staticMetaObject = {
-    { &QWidget::staticMetaObject, qt_meta_stringdata_DCam_Config,
-      qt_meta_data_DCam_Config, 0 }
+    {
+        &QWidget::staticMetaObject, qt_meta_stringdata_DCam_Config,
+        qt_meta_data_DCam_Config, 0
+    }
 };
 
 #ifdef Q_NO_DATA_RELOCATION
-const QMetaObject &DCam_Config::getStaticMetaObject() { return staticMetaObject; }
+const QMetaObject& DCam_Config::getStaticMetaObject() { return staticMetaObject; }
 #endif //Q_NO_DATA_RELOCATION
 
-const QMetaObject *DCam_Config::metaObject() const
-{
+const QMetaObject* DCam_Config::metaObject() const {
     return QObject::d_ptr->metaObject ? QObject::d_ptr->metaObject : &staticMetaObject;
 }
 
-void *DCam_Config::qt_metacast(const char *_clname)
-{
-    if (!_clname) return 0;
+void* DCam_Config::qt_metacast(const char* _clname) {
+    if (!_clname) { return 0; }
     if (!strcmp(_clname, qt_meta_stringdata_DCam_Config))
-        return static_cast<void*>(const_cast< DCam_Config*>(this));
+        { return static_cast<void*>(const_cast< DCam_Config*>(this)); }
     return QWidget::qt_metacast(_clname);
 }
 
-int DCam_Config::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
-{
+int DCam_Config::qt_metacall(QMetaObject::Call _c, int _id, void** _a) {
     _id = QWidget::qt_metacall(_c, _id, _a);
     if (_id < 0)
-        return _id;
+        { return _id; }
     return _id;
 }
 QT_END_MOC_NAMESPACE
