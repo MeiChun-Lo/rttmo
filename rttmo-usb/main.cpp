@@ -22,7 +22,7 @@ using namespace cv;
 
 int m_live_usb = 1;
 int m_init = 0;
-int m_mode = 0;
+int m_mode = 3;
 
 
 void runHDR(Mat& im1, Mat& im2, Mat& im3) {
@@ -30,7 +30,7 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
     MSG("hdr...");
 
     Mat hdr(im1.rows, im1.cols, CV_32FC3);
-    if (m_live_usb) { makehdr3log(&im1, &im2, &im3, &hdr); }
+    if (m_live_usb) { makehdr3log(&im1, &im2, &im3, &hdr); hdr *= 15;}
     else { im1.convertTo(hdr, CV_32FC3); }
 
     if (m_mode == 3) {
@@ -118,6 +118,7 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
         cvtColor(hdr, hdr, CV_XYZ2BGR);
         hdr *= 255;
 
+
     } else if (m_mode == 1) {
 
         // sharpen image using "unsharp mask" algorithm
@@ -128,12 +129,12 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
         Mat sharpened = img * (1 + amount) + blurred * (-amount);
         img.copyTo(sharpened, lowContrastMask);
         hdr = sharpened;
+
         // clamp
         hdr = min(hdr, 255);
         hdr = max(hdr, 0);
 
     } else {
-
     }
 
     hdr.convertTo(hdr, CV_8UC3);
