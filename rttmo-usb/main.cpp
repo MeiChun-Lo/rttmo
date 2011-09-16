@@ -267,8 +267,8 @@ int main(int argc, char** argv) {
 
             // quit?
             char key;
-            //key = (char) cvWaitKey(10);
-            key = (char) cvWaitKey(444);
+            key = (char) cvWaitKey(10); // for real-time
+            //key = (char) cvWaitKey(444); // for testing
             if (key == 27 || key == 'q' || key == 'Q') { break; }
             m_init = 1;
         }
