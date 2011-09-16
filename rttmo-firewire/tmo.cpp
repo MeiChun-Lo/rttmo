@@ -232,7 +232,7 @@ void matrix_upsample(const int outCols, const int outRows, const float*   in, fl
     const float factor = 1.0f / (dx * dy); // This gives a genuine upsampling matrix, not the transpose of the downsampling matrix
     // const float factor = 1.0f; // Theoretically, this should be the best.
 
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int y = 0; y < outRows; ++y) {
         const float sy = y * dy;
         const int iy1 = (y   * inRows) / outRows;
@@ -243,10 +243,10 @@ void matrix_upsample(const int outCols, const int outRows, const float*   in, fl
             const int ix1 = (x   * inCols) / outCols;
             const int ix2 = imin(((x + 1) * inCols) / outCols, inCols - 1);
 
-            out[x + y* outCols] = (((ix1 + 1) - sx) * ((iy1 + 1 - sy)) * in[ix1 + iy1*inCols] +
-                                   ((ix1 + 1) - sx) * (sy + dy - (iy1 + 1)) * in[ix1 + iy2*inCols] +
-                                   (sx + dx - (ix1 + 1)) * ((iy1 + 1 - sy)) * in[ix2 + iy1*inCols] +
-                                   (sx + dx - (ix1 + 1)) * (sy + dx - (iy1 + 1)) * in[ix2 + iy2*inCols]) * factor;
+            out[x + y * outCols] = (((ix1 + 1) - sx) * ((iy1 + 1 - sy)) * in[ix1 + iy1 * inCols] +
+                                    ((ix1 + 1) - sx) * (sy + dy - (iy1 + 1)) * in[ix1 + iy2 * inCols] +
+                                    (sx + dx - (ix1 + 1)) * ((iy1 + 1 - sy)) * in[ix2 + iy1 * inCols] +
+                                    (sx + dx - (ix1 + 1)) * (sy + dx - (iy1 + 1)) * in[ix2 + iy2 * inCols]) * factor;
 
         }
     }
@@ -260,7 +260,7 @@ void matrix_downsample(const int inCols, const int inRows, const float*   data, 
     const float dy = (float)inRows / ((float)outRows);
     const float normalize = 1.0f / (dx * dy);
 
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int y = 0; y < outRows; ++y) {
         const int iy1 = (y   * inRows) / outRows;
         const int iy2 = ((y + 1) * inRows) / outRows;
@@ -292,10 +292,10 @@ void matrix_downsample(const int inCols, const int inRows, const float*   data, 
                     } else {
                         factorx = 1.0f;    // We've got the full width of this pixel
                     }
-                    pixVal += data[j + i*inCols] * factorx * factory;
+                    pixVal += data[j + i * inCols] * factorx * factory;
                 }
             }
-            res[x + y* outCols] = pixVal * normalize;   // Normalize by the area of the new pixel
+            res[x + y * outCols] = pixVal * normalize;  // Normalize by the area of the new pixel
         }
     }
 }
@@ -324,7 +324,7 @@ inline void matrix_free(float* m) {
 
 // return = a + b
 inline void matrix_add(const int n, const float*   a, float*   b) {
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         b[i] += a[i];
     }
@@ -332,7 +332,7 @@ inline void matrix_add(const int n, const float*   a, float*   b) {
 
 // return = a - b
 inline void matrix_subtract(const int n, const float*   a, float*   b) {
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         b[i] = a[i] - b[i];
     }
@@ -340,7 +340,7 @@ inline void matrix_subtract(const int n, const float*   a, float*   b) {
 
 // multiply matrix a by scalar val
 inline void matrix_multiply_const(const int n, float*   a, const float val) {
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         a[i] *= val;
     }
@@ -349,7 +349,7 @@ inline void matrix_multiply_const(const int n, float*   a, const float val) {
 // multiply vector by vector (each vector should have one dimension equal to 1)
 float matrix_DotProduct(const int n, const float*   a, const float*   b) {
     float val = 0;
-#pragma omp parallel for reduction(+:val)
+    #pragma omp parallel for reduction(+:val)
     for (int j = 0; j < n; ++j) {
         val += a[j] * b[j];
     }
@@ -377,7 +377,7 @@ inline void calculate_and_add_divergence(const int cols, const int rows, const f
     divG[0] += Gx[0] + Gy[0];
 
     // ky = 0
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int kx = 1; kx < cols; ++kx) {
         divGx = Gx[kx] - Gx[kx - 1];
         divGy = Gy[kx];
@@ -390,11 +390,11 @@ inline void calculate_and_add_divergence(const int cols, const int rows, const f
         // kx = 0
         divGx = Gx[kycols];
         divGy = Gy[kycols] - Gy[kycols - cols];
-        divG[ky* cols] += divGx + divGy;
+        divG[ky * cols] += divGx + divGy;
 
         // kx > 0
         for (int kx = 1; kx < cols; ++kx) {
-            divGx = Gx[kx + kycols] - Gx[kx + kycols-1];
+            divGx = Gx[kx + kycols] - Gx[kx + kycols - 1];
             divGy = Gy[kx + kycols] - Gy[kx + kycols - cols];
             divG[kx + kycols] += divGx + divGy;
         }
@@ -449,7 +449,7 @@ inline void calculate_scale_factor(const int n, const float*   G, float*   C) {
     const float detectT = 0.001f;
     const float a = 0.038737;
     const float b = 0.537756;
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         C[i] = 1.0f / (a * powf((max(detectT, fabsf(G[i]))) , b));
     }
@@ -469,7 +469,7 @@ void pyramid_calculate_scale_factor(pyramid_t* pyramid, pyramid_t* pC) {
 // Scale gradient (Gx and Gy) by C (Cx and Cy)
 // G = G / C
 inline void scale_gradient(const int n, float*   G, const float*   C) {
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         G[i] *= C[i];
     }
@@ -542,12 +542,12 @@ pyramid_t* pyramid_allocate(int cols, int rows) {
 
 // calculate gradients
 inline void calculate_gradient(const int cols, const int rows, const float*   lum, float*   Gx, float*   Gy) {
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int ky = 0; ky < rows; ++ky) {
         for (int kx = 0; kx < cols; ++kx) {
             const int idx = kx + ky * cols;
             if (kx == (cols - 1)) { Gx[idx] = 0; }
-            else { Gx[idx] = lum[idx+1] - lum[idx]; }
+            else { Gx[idx] = lum[idx + 1] - lum[idx]; }
             if (ky == (rows - 1)) { Gy[idx] = 0; }
             else { Gy[idx] = lum[idx + cols] - lum[idx]; }
         }
@@ -576,7 +576,7 @@ void pyramid_calculate_gradient(pyramid_t* pyramid, float* lum_temp) {
 
 // x = -0.25 * b
 inline void solveX(const int n, const float*   b, float*   x) {
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < n; ++i) {
         x[i] = (-0.25f) * b[i];
     }
@@ -642,11 +642,11 @@ void linbcg(pyramid_t* pyramid, pyramid_t* pC, float*   b, float*   x, const int
             matrix_copy(n, zz, pp);
         } else {
             const float bk = bknum / bkden; // beta = ...
-#pragma omp parallel for
+            #pragma omp parallel for
             for (int i = 0; i < n; ++i) {
                 p[i]  =  z[i] + bk *  p[i];
             }
-#pragma omp parallel for
+            #pragma omp parallel for
             for (int i = 0; i < n; ++i) {
                 pp[i] = zz[i] + bk * pp[i];
             }
@@ -660,11 +660,11 @@ void linbcg(pyramid_t* pyramid, pyramid_t* pC, float*   b, float*   x, const int
 
         const float ak = bknum / matrix_DotProduct(n, z, pp); // alfa = ...
 
-#pragma omp parallel for
+        #pragma omp parallel for
         for (int i = 0 ; i < n ; ++i) {
             r[i]  -= ak *  z[i];	// r =  r - alfa * z
         }
-#pragma omp parallel for
+        #pragma omp parallel for
         for (int i = 0 ; i < n ; ++i) {
             rr[i] -= ak * zz[i];	//rr = rr - alfa * zz
         }
@@ -685,7 +685,7 @@ void linbcg(pyramid_t* pyramid, pyramid_t* pC, float*   b, float*   x, const int
             num_backwards = 0;
         }
 
-#pragma omp parallel for
+        #pragma omp parallel for
         for (int i = 0 ; i < n ; ++i) {
             x[i] += ak * p[i];    // x =  x + alfa * p
         }
@@ -792,7 +792,7 @@ void lincg(pyramid_t* pyramid, pyramid_t* pC, const float*   b, float*   x, cons
         const float alpha = rdotr / matrix_DotProduct(n, p, Ap);
 
         // r = r - alpha Ap
-#pragma omp parallel for
+        #pragma omp parallel for
         for (int i = 0; i < n; ++i) {
             r[i] -= alpha * Ap[i];
         }
@@ -815,7 +815,7 @@ void lincg(pyramid_t* pyramid, pyramid_t* pC, const float*   b, float*   x, cons
         }
 
         // x = x + alpha p
-#pragma omp parallel for
+        #pragma omp parallel for
         for (int i = 0; i < n; ++i) {
             x[i] += alpha * p[i];
         }
@@ -845,7 +845,7 @@ void lincg(pyramid_t* pyramid, pyramid_t* pC, const float*   b, float*   x, cons
         } else {
             // p = r + beta p
             const float beta = rdotr / old_rdotr;
-#pragma omp parallel for
+            #pragma omp parallel for
             for (int i = 0; i < n; ++i) {
                 p[i] = r[i] + beta * p[i];
             }
@@ -883,19 +883,19 @@ inline float lookup_table(const int n, const float*   in_tab, const float*   out
 
     for (int j = 1; j < n; ++j) {
         if (val < in_tab[j]) {
-            const float dd = (val - in_tab[j-1]) / (in_tab[j] - in_tab[j-1]);
-            return out_tab[j-1] + (out_tab[j] - out_tab[j-1]) * dd;
+            const float dd = (val - in_tab[j - 1]) / (in_tab[j] - in_tab[j - 1]);
+            return out_tab[j - 1] + (out_tab[j] - out_tab[j - 1]) * dd;
         }
     }
 
-    return out_tab[n-1];
+    return out_tab[n - 1];
 }
 
 
 // transform gradient (Gx,Gy) to R
 inline void transform_to_R(const int n, float*   G, float detail_factor) {
     const float log10 = 2.3025850929940456840179914546844 * detail_factor;
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int j = 0; j < n; ++j) {
         // G to W
         const float absG = fabsf(G[j]);
@@ -923,7 +923,7 @@ inline void pyramid_transform_to_R(pyramid_t* pyramid, float detail_factor) {
 // transform from R to G
 inline void transform_to_G(const int n, float*   R, float detail_factor) {
     const float log10 = 2.3025850929940456840179914546844 * detail_factor; //here we are actually changing the base of logarithm
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int j = 0; j < n; ++j) {
         // RESP to W
         int sign;
@@ -957,7 +957,7 @@ inline void pyramid_gradient_multiply(pyramid_t* pyramid, const float val) {
 
 
 int sort_float(const void* const v1, const void* const v2) {
-    if (*((float*)v1) < *((float*)v2)) {
+    if (*((float*)v1) < * ((float*)v2)) {
         return -1;
     }
 
@@ -1041,8 +1041,8 @@ void contrast_equalization(pyramid_t* pp, const float contrastFactor) {
         const int pixels = l->rows * l->cols;
         const int offset = index;
         for (int c = 0; c < pixels; ++c) {
-            hist[c+offset].size = sqrtf(l->Gx[c] * l->Gx[c] + l->Gy[c] * l->Gy[c]);
-            hist[c+offset].index = c + offset;
+            hist[c + offset].size = sqrtf(l->Gx[c] * l->Gx[c] + l->Gy[c] * l->Gy[c]);
+            hist[c + offset].index = c + offset;
         }
         index += pixels;
         l = l->next;
@@ -1053,7 +1053,7 @@ void contrast_equalization(pyramid_t* pp, const float contrastFactor) {
 
     // Calculate cdf
     const float norm = 1.0f / (float) total_pixels;
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < total_pixels; ++i) {
         hist[i].cdf = ((float) i) * norm;
     }
@@ -1067,9 +1067,9 @@ void contrast_equalization(pyramid_t* pp, const float contrastFactor) {
     while (l != NULL) {
         const int pixels = l->rows * l->cols;
         const int offset = index;
-#pragma omp parallel for
+        #pragma omp parallel for
         for (int c = 0; c < pixels; ++c) {
-            const float scale = contrastFactor * hist[c+offset].cdf / hist[c+offset].size;
+            const float scale = contrastFactor * hist[c + offset].cdf / hist[c + offset].size;
             l->Gx[c] *= scale;
             l->Gy[c] *= scale;
         }
@@ -1116,7 +1116,7 @@ int tmo_mantiuk06_contmap(int c, int r, float* R, float* G, float* B, float* Y,
     }
 
     const float clip_min = 1e-6f * Ymax;
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int j = 0; j < n; ++j) {
         if (unlikely(R[j] < clip_min)) { R[j] = clip_min; }
         if (unlikely(G[j] < clip_min)) { G[j] = clip_min; }
@@ -1124,7 +1124,7 @@ int tmo_mantiuk06_contmap(int c, int r, float* R, float* G, float* B, float* Y,
         if (unlikely(Y[j] < clip_min)) { Y[j] = clip_min; }
     }
 
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int j = 0; j < n; ++j) {
         R[j] /= Y[j];
         G[j] /= Y[j];
@@ -1180,7 +1180,7 @@ int tmo_mantiuk06_contmap(int c, int r, float* R, float* G, float* B, float* Y,
     matrix_free(temp);
 
     const float disp_dyn_range = 2.3f;
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int j = 0; j < n; ++j) {
         Y[j] = (Y[j] - l_min) / (l_max - l_min) * disp_dyn_range - disp_dyn_range;    // x scaled
     }
@@ -1188,7 +1188,7 @@ int tmo_mantiuk06_contmap(int c, int r, float* R, float* G, float* B, float* Y,
     MSG("  rgb convert");
 
     /* Transform to linear scale RGB */
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int j = 0; j < n; ++j) {
         Y[j] = powf(10, Y[j]);
         R[j] = powf(R[j], saturationFactor) * Y[j];

@@ -14,6 +14,7 @@ using namespace cv;
 
 #define LIVE_VIEW 1
 
+#define SLIDER_MAX 1
 #ifndef CV_WINDOW_KEEPRATIO
 #define CV_WINDOW_KEEPRATIO 0
 #endif
@@ -24,7 +25,7 @@ int m_init = 0;
 int m_contrast = 0;
 int m_saturation = 0;
 int m_detail = 0;
-#define SLIDER_MAX 1
+
 
 void runHDR(Mat& im1, Mat& im2, Mat& im3) {
 
@@ -32,11 +33,6 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
 
     Mat hdr(im2.rows, im2.cols, CV_32FC3);
     makehdr3log(&im1, &im2, &im3, &hdr);
-//	makehdr2log(&im1, &im3, &hdr);
-
-//	imshow("hdr", hdr);
-
-    /////////////////////////
 
     Mat luv(hdr.rows, hdr.cols, CV_32FC3);
     cvtColor(hdr, luv, CV_BGR2YCrCb);
@@ -45,9 +41,6 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
     split(luv, lplanes);
     Mat Y(hdr.rows, hdr.cols, CV_32FC1);
     lplanes[0].convertTo(Y, CV_32FC1);
-
-
-    /////////////////////////
 
     vector<Mat> cplanes;
     split(hdr, cplanes);
@@ -58,21 +51,16 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
     Mat B(hdr.rows, hdr.cols, CV_32FC1);
     cplanes[2].convertTo(B, CV_32FC1);
 
-    /////////////////////////
-
     bool bcg = false;
     int itmax = 256;
     float tol = 1e-2;
     int cols = hdr.cols;
     int rows = hdr.rows;
 
-//	float contrast = -0.133; /* neg = contrast eq | pos = contrast map */
-//	float saturation = 1.133;
-//	float detail = 1.133;
-
-    float contrast = (m_contrast) ? 0.11 : -0.11 ;
-    float saturation = (m_saturation) ? 1.5 : 1.0 ;
+    float contrast = (m_contrast) ? 0.2 : -0.2 ;   /* neg = contrast eq | pos = contrast map */
+    float saturation = (m_saturation) ? 1.2 : 0.9 ;
     float detail = (m_detail) ? 2.0 : 1.0 ;
+
 
     MSG("cont %f", contrast);
     MSG("sat %f", saturation);
@@ -96,12 +84,7 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
     merge(rgb, 3, hdr);
 
     MSG("done.");
-
-    /////////////////////////
-
     imshow("tmo", hdr);
-
-    m_init = 1;
 }
 
 
@@ -123,8 +106,6 @@ int main(int argc, char** argv) {
     IplImage* img3 = cvLoadImage(argv[3], 1);
     Mat im3(img3);
 
-    /////////////////////////
-
     namedWindow("im1", CV_WINDOW_KEEPRATIO);
     imshow("im1", im1);
     namedWindow("im2", CV_WINDOW_KEEPRATIO);
@@ -132,8 +113,7 @@ int main(int argc, char** argv) {
     namedWindow("im3", CV_WINDOW_KEEPRATIO);
     imshow("im3", im3);
 
-    /////////////////////////
-//	if (0==m_init)  { namedWindow("hdr", CV_WINDOW_KEEPRATIO); }
+    if (0 == m_init)  { namedWindow("hdr", CV_WINDOW_KEEPRATIO); }
     if (0 == m_init)  { namedWindow("tmo", CV_WINDOW_KEEPRATIO); }
 
     runHDR(im1, im2, im3);
@@ -145,8 +125,6 @@ int main(int argc, char** argv) {
         key = (char) cvWaitKey(10);
         if (key == 27 || key == 'q' || key == 'Q') { break; }
     }
-
-    /////////////////////////
 
     return 0;
 
@@ -195,8 +173,6 @@ int main(int argc, char** argv) {
         camera_firewire.GrabCvImage(rawi);
         Mat cimage(rawi);
 
-        /////////////////////////
-
 #if 1
         //camera_firewire.setExposure(1023);
         camera_firewire.setShutter(225);
@@ -223,14 +199,10 @@ int main(int argc, char** argv) {
         resize(_img3, img3, Size(cimage.cols / div, cimage.rows / div));
         imshow("im3", img3);
 
-        /////////////////////////
-
         runHDR(img1, img2, img3);
 
-        /////////////////////////
-
 #else
-    imshow("cam", cimage);
+        imshow("cam", cimage);
 #endif
 
 
@@ -238,8 +210,6 @@ int main(int argc, char** argv) {
         char key;
         key = (char) cvWaitKey(10);
         if (key == 27 || key == 'q' || key == 'Q') { break; }
-
-
         m_init = 1;
     }
 
