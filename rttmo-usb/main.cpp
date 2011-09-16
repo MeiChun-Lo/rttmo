@@ -13,7 +13,7 @@ using namespace std;
 using namespace cv;
 
 
-#define SLIDER_MAX 1
+#define SLIDER_MAX 3
 #ifndef CV_WINDOW_KEEPRATIO
 #define CV_WINDOW_KEEPRATIO 0
 #endif
@@ -22,9 +22,7 @@ using namespace cv;
 
 int m_live_usb = 1;
 int m_init = 0;
-int m_contrast = 1;  /* neg = contrast eq | pos = contrast map */
-int m_saturation = 1;
-int m_detail = 1;
+int m_mode = 0;
 
 
 void runHDR(Mat& im1, Mat& im2, Mat& im3) {
@@ -35,8 +33,7 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
     if (m_live_usb) { makehdr3log(&im1, &im2, &im3, &hdr); }
     else { im1.convertTo(hdr, CV_32FC3); }
 
-    /////////////////////////
-    if (1) {
+    if (m_mode == 3) {
 
         Mat luv(hdr.rows, hdr.cols, CV_32FC3);
         cvtColor(hdr, luv, CV_BGR2YCrCb);
@@ -45,8 +42,6 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
         split(luv, lplanes);
         Mat Y(hdr.rows, hdr.cols, CV_32FC1);
         lplanes[0].convertTo(Y, CV_32FC1);
-
-        /////////////////////////
 
         vector<Mat> cplanes;
         split(hdr, cplanes);
@@ -63,8 +58,11 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
         int cols = hdr.cols;
         int rows = hdr.rows;
 
-        float contrast = (m_contrast) ? 0.11 : -0.11 ;
-        float saturation = (m_saturation) ? 1.5 : 1.0 ;
+        int m_contrast = 1;
+        int m_saturation = 1;
+        int m_detail = 1;
+        float contrast = (m_contrast) ? 0.2 : -0.2 ;   /* neg = contrast eq | pos = contrast map */
+        float saturation = (m_saturation) ? 1.1 : 0.9 ;
         float detail = (m_detail) ? 2.0 : 1.0 ;
 
         float* fR = (float*)R.data;
@@ -81,8 +79,9 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
 
         Mat rgb[] = {R, G, B};
         merge(rgb, 3, hdr);
+        hdr *= 255;
 
-    } else {
+    } else if (m_mode == 1) {
 
         Mat xyz(hdr.rows, hdr.cols, CV_32FC3);
         cvtColor(hdr, xyz, CV_BGR2XYZ);
@@ -98,7 +97,7 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
 
         /////////////////////////
 
-        float bias = 0.95;  // 0.85;
+        float bias = 0.99;  // 0.85;
         int width = hdr.cols;
         int height = hdr.rows;
         Mat L(hdr.rows, hdr.cols, CV_32FC1);
@@ -119,11 +118,27 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
         Mat rgb[] = {X, Y, Z};
         merge(rgb, 3, hdr);
         cvtColor(hdr, hdr, CV_XYZ2BGR);
+        hdr *= 255;
+
+    } else if (m_mode == 2) {
+
+        // sharpen image using "unsharp mask" algorithm
+        Mat img = hdr;
+        Mat blurred; double sigma = 9, threshold = 0, amount = 1;
+        GaussianBlur(img, blurred, Size(), sigma, sigma);
+        Mat lowContrastMask = abs(img - blurred) < threshold;
+        Mat sharpened = img * (1 + amount) + blurred * (-amount);
+        img.copyTo(sharpened, lowContrastMask);
+        hdr = sharpened;
+        // clamp
+        hdr = min(hdr, 255);
+        hdr = max(hdr, 0);
+
+    } else {
 
     }
-    /////////////////////////
 
-//    hdr *= 255;
+    hdr.convertTo(hdr, CV_8UC3);
     MSG("done.");
     imshow("tmo", hdr);
     m_init = 1;
@@ -180,9 +195,11 @@ int main(int argc, char** argv) {
 
 
         namedWindow("trackbar", CV_WINDOW_KEEPRATIO);
-        createTrackbar("contrast", "trackbar", &m_contrast, SLIDER_MAX, 0);
-        createTrackbar("saturation", "trackbar", &m_saturation, SLIDER_MAX, 0);
-        createTrackbar("detail", "trackbar", &m_detail, SLIDER_MAX, 0);
+        imshow("trackbar",Mat(50,500,CV_8UC3));
+        // createTrackbar("contrast", "trackbar", &m_contrast, SLIDER_MAX, 0);
+        // createTrackbar("saturation", "trackbar", &m_saturation, SLIDER_MAX, 0);
+        // createTrackbar("detail", "trackbar", &m_detail, SLIDER_MAX, 0);
+        createTrackbar("mode", "trackbar", &m_mode, SLIDER_MAX, 0);
 
         // camera setup
         Mat cimage;
@@ -217,7 +234,7 @@ int main(int argc, char** argv) {
             capture >> cimage;
             if (cimage.empty()) {
                 cout << "Couldn't load " << endl;
-                continue;
+                break;
             }
 
             /////////////////////////
@@ -268,9 +285,8 @@ int main(int argc, char** argv) {
 
             // quit?
             char key;
-            key = (char) cvWaitKey(10);
+            key = (char) cvWaitKey(300);
             if (key == 27 || key == 'q' || key == 'Q') { break; }
-
 
             m_init = 1;
         }
