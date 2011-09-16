@@ -185,7 +185,7 @@ int main(int argc, char** argv) {
         string s = argv[1];
         if (s.compare(string("uh")) == 0) { m_live_usb = 1; m_cap_hdr = 1; }
         else if (s.compare(string("un")) == 0) { m_live_usb = 1; m_cap_hdr = 0; }
-        else { m_live_usb = 0; }
+        else { m_live_usb = 0; m_cap_hdr = 0; }
 
         namedWindow("trackbar", CV_WINDOW_KEEPRATIO); cvMoveWindow("trackbar", 10, 10);
         imshow("trackbar", Mat(150, 350, CV_8UC1));
@@ -283,8 +283,8 @@ int main(int argc, char** argv) {
 
             // quit?
             char key;
-//            key = (char) cvWaitKey(10); // for real-time
-            key = (char) cvWaitKey(444); // for testing
+            key = (char) cvWaitKey(10); // for real-time
+//            key = (char) cvWaitKey(444); // for testing
             if (key == 27 || key == 'q' || key == 'Q') { break; }
             m_init = 1;
         }
