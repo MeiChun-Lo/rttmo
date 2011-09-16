@@ -21,8 +21,9 @@ using namespace cv;
 #include "tmo.h"
 
 int m_live_usb = 1;
+int m_cap_hdr = 1;
 int m_init = 0;
-int m_mode = 3;
+int m_mode = 1;
 
 
 void runHDR(Mat& im1, Mat& im2, Mat& im3) {
@@ -30,7 +31,7 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
     MSG("hdr...");
 
     Mat hdr(im1.rows, im1.cols, CV_32FC3);
-    if (m_live_usb) { makehdr3log(&im1, &im2, &im3, &hdr); hdr *= 15;}
+    if (m_cap_hdr) { makehdr3log(&im1, &im2, &im3, &hdr); hdr *= 15;}
     else { im1.convertTo(hdr, CV_32FC3); }
 
     if (m_mode == 3) {
@@ -123,7 +124,7 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
 
         // sharpen image using "unsharp mask" algorithm
         Mat img = hdr;
-        Mat blurred; double sigma = 7, threshold = 0, amount = 0.75;
+        Mat blurred; double sigma = 13, threshold = 0, amount = 0.75;
         GaussianBlur(img, blurred, Size(), sigma, sigma);
         Mat lowContrastMask = abs(img - blurred) < threshold;
         Mat sharpened = img * (1 + amount) + blurred * (-amount);
@@ -146,7 +147,7 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
 int main(int argc, char** argv) {
 
     if (argc < 2)  {
-        fprintf(stderr, "u = live usb | img1-3 | movie file \n usage: %s u \n        %s img1 img2 img3 \n        %s video-filename \n\n", argv[0], argv[0], argv[0]);
+        fprintf(stderr, "uh = live usb hdr | un = live usb raw | img1-3 | movie file \n usage:  %s uh \n         %s un \n         %s img1 img2 img3 \n         %s video-filename \n\n", argv[0], argv[0], argv[0], argv[0]);
         return 1;
     }
     MSG("loading...");
@@ -182,7 +183,8 @@ int main(int argc, char** argv) {
     } else {
 
         string s = argv[1];
-        if (s.compare(string("u")) == 0) { m_live_usb = 1; }
+        if (s.compare(string("uh")) == 0) { m_live_usb = 1; m_cap_hdr = 1; }
+        else if (s.compare(string("un")) == 0) { m_live_usb = 1; m_cap_hdr = 0; }
         else { m_live_usb = 0; }
 
         namedWindow("trackbar", CV_WINDOW_KEEPRATIO); cvMoveWindow("trackbar", 10, 10);
@@ -196,8 +198,8 @@ int main(int argc, char** argv) {
         if (!m_live_usb) {
             capture.open(argv[1]);
         } else {
-            int w = 320 / 2;
-            int h = 240 / 2;
+            int w = 320;
+            int h = 240;
             capture.set(CV_CAP_PROP_FRAME_WIDTH, w);
             capture.set(CV_CAP_PROP_FRAME_HEIGHT, h);
             capture.open(0); //try to open
@@ -224,7 +226,9 @@ int main(int argc, char** argv) {
                 break;
             }
 
-            if (m_live_usb) {
+            if (m_live_usb && m_cap_hdr) {
+
+                // hdr capture
                 capture.set(CV_CAP_PROP_BRIGHTNESS, 0.05);
                 capture >> cimage;
                 capture >> cimage;
@@ -256,10 +260,22 @@ int main(int argc, char** argv) {
                 capture >> cimage;
 
                 runHDR(img1, img2, img3);
-            } else {
+
+            } else if (m_live_usb && !m_cap_hdr) {
+
+                // raw usb
+                capture >> cimage;
                 Mat img1, img2, img3;
                 cimage.copyTo(img1);
                 runHDR(img1, img2, img3);
+
+            } else {
+
+                // loaded video
+                Mat img1, img2, img3;
+                cimage.copyTo(img1);
+                runHDR(img1, img2, img3);
+
             }
 
             imshow("cam", cimage);
@@ -267,8 +283,8 @@ int main(int argc, char** argv) {
 
             // quit?
             char key;
-            key = (char) cvWaitKey(10); // for real-time
-            //key = (char) cvWaitKey(444); // for testing
+//            key = (char) cvWaitKey(10); // for real-time
+            key = (char) cvWaitKey(444); // for testing
             if (key == 27 || key == 'q' || key == 'Q') { break; }
             m_init = 1;
         }
