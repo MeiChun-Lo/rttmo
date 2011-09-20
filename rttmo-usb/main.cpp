@@ -13,7 +13,7 @@ using namespace std;
 using namespace cv;
 
 
-#define SLIDER_MAX 3
+#define SLIDER_MAX 4
 #ifndef CV_WINDOW_KEEPRATIO
 #define CV_WINDOW_KEEPRATIO 0
 #endif
@@ -23,7 +23,8 @@ using namespace cv;
 int m_live_usb = 1;
 int m_cap_hdr = 1;
 int m_init = 0;
-int m_mode = 1;
+int m_mode = 3;
+int m_test = 2;
 
 
 void runHDR(Mat& im1, Mat& im2, Mat& im3) {
@@ -34,8 +35,9 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
     if (m_cap_hdr) { makehdr3log(&im1, &im2, &im3, &hdr); hdr *= 15;}
     else { im1.convertTo(hdr, CV_32FC3); }
 
-    if (m_mode == 3) {
+    if (m_mode == 4) {
 
+        // mantiuk
         Mat luv(hdr.rows, hdr.cols, CV_32FC3);
         cvtColor(hdr, luv, CV_BGR2YCrCb);
 
@@ -62,8 +64,8 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
         int m_contrast = 1;
         int m_saturation = 1;
         int m_detail = 1;
-        float contrast = (m_contrast) ? 0.2 : -0.2 ;   /* neg = contrast eq | pos = contrast map */
-        float saturation = (m_saturation) ? 1.2 : 0.9 ;
+        float contrast = (m_contrast) ? 0.25 : -0.25 ;   /* neg = contrast eq | pos = contrast map */
+        float saturation = (m_saturation) ? 1.25 : 0.85 ;
         float detail = (m_detail) ? 2.0 : 1.0 ;
 
         float* fR = (float*)R.data;
@@ -82,8 +84,22 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
         merge(rgb, 3, hdr);
         hdr *= 255;
 
-    } else if (m_mode == 2) {
+    } else if (m_mode == 3) {
 
+        // sharpen image using "unsharp mask" algorithm
+        Mat img = hdr;
+        Mat blurred; double sigma = 7, threshold = 0, amount = 1;
+        GaussianBlur(img, blurred, Size(), sigma, sigma);
+        Mat sharpened = img * (1 + amount) + blurred * (-amount);
+        Mat lowContrastMask = abs(img - blurred) < threshold;
+        img.copyTo(sharpened, lowContrastMask);
+        hdr = sharpened;
+        // clamp
+        hdr = min(hdr, 255);
+        hdr = max(hdr, 0);
+
+
+        // drago
         Mat xyz(hdr.rows, hdr.cols, CV_32FC3);
         cvtColor(hdr, xyz, CV_BGR2XYZ);
 
@@ -119,24 +135,62 @@ void runHDR(Mat& im1, Mat& im2, Mat& im3) {
         cvtColor(hdr, hdr, CV_XYZ2BGR);
         hdr *= 255;
 
+    } else if (m_mode == 2) {
+
+        // drago
+        Mat xyz(hdr.rows, hdr.cols, CV_32FC3);
+        cvtColor(hdr, xyz, CV_BGR2XYZ);
+
+        vector<Mat> lplanes;
+        split(xyz, lplanes);
+        Mat Y(hdr.rows, hdr.cols, CV_32FC1);
+        Mat X(hdr.rows, hdr.cols, CV_32FC1);
+        Mat Z(hdr.rows, hdr.cols, CV_32FC1);
+        lplanes[1].convertTo(Y, CV_32FC1);
+        lplanes[0].convertTo(X, CV_32FC1);
+        lplanes[2].convertTo(Z, CV_32FC1);
+
+        float bias = 0.99;  // 0.85;
+        int width = hdr.cols;
+        int height = hdr.rows;
+        Mat L(hdr.rows, hdr.cols, CV_32FC1);
+        float* fY = (float*)Y.data;
+        float* fL = (float*)L.data;
+
+        tmo_drago03(width, height,
+                    fY,
+                    fL,
+                    bias);
+
+        Mat scale(hdr.rows, hdr.cols, CV_32FC1);
+        divide(L, Y, scale);
+        multiply(Y, scale, Y);
+        multiply(X, scale, X);
+        multiply(Z, scale, Z);
+
+        Mat rgb[] = {X, Y, Z};
+        merge(rgb, 3, hdr);
+        cvtColor(hdr, hdr, CV_XYZ2BGR);
+        hdr *= 255;
 
     } else if (m_mode == 1) {
 
         // sharpen image using "unsharp mask" algorithm
         Mat img = hdr;
-        Mat blurred; double sigma = 13, threshold = 0, amount = 0.75;
+        Mat blurred; double sigma = 7, threshold = 0, amount = 1.66f;
         GaussianBlur(img, blurred, Size(), sigma, sigma);
-        Mat lowContrastMask = abs(img - blurred) < threshold;
         Mat sharpened = img * (1 + amount) + blurred * (-amount);
+        Mat lowContrastMask = abs(img - blurred) < threshold;
         img.copyTo(sharpened, lowContrastMask);
         hdr = sharpened;
 
-        // clamp
-        hdr = min(hdr, 255);
-        hdr = max(hdr, 0);
-
     } else {
+
     }
+
+    // clamp
+    hdr = min(hdr, 255);
+    hdr = max(hdr, 0);
 
     hdr.convertTo(hdr, CV_8UC3);
     MSG("done.");
@@ -188,8 +242,9 @@ int main(int argc, char** argv) {
         else { m_live_usb = 0; m_cap_hdr = 0; }
 
         namedWindow("trackbar", CV_WINDOW_KEEPRATIO); cvMoveWindow("trackbar", 10, 10);
-        imshow("trackbar", Mat(150, 350, CV_8UC1));
+        imshow("trackbar", Mat(70, 300, CV_8UC1));
         createTrackbar("mode", "trackbar", &m_mode, SLIDER_MAX, 0);
+        createTrackbar("test", "trackbar", &m_test, 15, 0);
 
         // camera setup
         Mat cimage;
@@ -264,7 +319,6 @@ int main(int argc, char** argv) {
             } else if (m_live_usb && !m_cap_hdr) {
 
                 // raw usb
-                capture >> cimage;
                 Mat img1, img2, img3;
                 cimage.copyTo(img1);
                 runHDR(img1, img2, img3);
