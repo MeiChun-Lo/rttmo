@@ -62,14 +62,14 @@ const QMetaObject* DCam_Feature::metaObject() const {
 void* DCam_Feature::qt_metacast(const char* _clname) {
     if (!_clname) { return 0; }
     if (!strcmp(_clname, qt_meta_stringdata_DCam_Feature))
-        { return static_cast<void*>(const_cast< DCam_Feature*>(this)); }
+    { return static_cast<void*>(const_cast< DCam_Feature*>(this)); }
     return QObject::qt_metacast(_clname);
 }
 
 int DCam_Feature::qt_metacall(QMetaObject::Call _c, int _id, void** _a) {
     _id = QObject::qt_metacall(_c, _id, _a);
     if (_id < 0)
-        { return _id; }
+    { return _id; }
     if (_c == QMetaObject::InvokeMetaMethod) {
         switch (_id) {
         case 0: auto_changed((*reinterpret_cast< bool(*)>(_a[1]))); break;
@@ -119,14 +119,14 @@ const QMetaObject* DCam_Config::metaObject() const {
 void* DCam_Config::qt_metacast(const char* _clname) {
     if (!_clname) { return 0; }
     if (!strcmp(_clname, qt_meta_stringdata_DCam_Config))
-        { return static_cast<void*>(const_cast< DCam_Config*>(this)); }
+    { return static_cast<void*>(const_cast< DCam_Config*>(this)); }
     return QWidget::qt_metacast(_clname);
 }
 
 int DCam_Config::qt_metacall(QMetaObject::Call _c, int _id, void** _a) {
     _id = QWidget::qt_metacall(_c, _id, _a);
     if (_id < 0)
-        { return _id; }
+    { return _id; }
     return _id;
 }
 QT_END_MOC_NAMESPACE

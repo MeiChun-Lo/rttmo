@@ -202,7 +202,7 @@ void transform_to_G(const int n, float*   R, float detail_factor);
 void pyramid_transform_to_G(pyramid_t* pyramid, float detail_factor);
 void pyramid_gradient_multiply(pyramid_t* pyramid, const float val);
 
-void swap_pointers(float* &pOne, float* &pTwo); // utility function
+void swap_pointers(float*& pOne, float*& pTwo); // utility function
 
 void dump_matrix_to_file(const int width, const int height, const float* const m, const char* const file_name);
 void matrix_show(const char* const text, int rows, int cols, const float* const data);
@@ -273,9 +273,9 @@ void matrix_upsample_simple(const int outCols, const int outRows, const float* c
 
 void matrix_upsample(const int outCols, const int outRows, const float* const in, float* const out) {
     if (outRows % 2 == 0 && outCols % 2 == 0)
-        { matrix_upsample_simple(outCols, outRows, in, out); }
+    { matrix_upsample_simple(outCols, outRows, in, out); }
     else
-        { matrix_upsample_full(outCols, outRows, in, out); }
+    { matrix_upsample_full(outCols, outRows, in, out); }
 }
 
 // downsample the matrix
@@ -319,18 +319,18 @@ void matrix_downsample_full(const int inCols, const int inRows, const float*   d
             float factorx, factory;
             for (int i = iy1; i <= iy2 && i < inRows; i++) {
                 if (i == iy1)
-                    { factory = fy1; }  // We're just getting the bottom edge of this pixel
+                { factory = fy1; }  // We're just getting the bottom edge of this pixel
                 else if (i == iy2)
-                    { factory = fy2; }  // We're just gettting the top edge of this pixel
+                { factory = fy2; }  // We're just gettting the top edge of this pixel
                 else
-                    { factory = 1.0f; } // We've got the full height of this pixel
+                { factory = 1.0f; } // We've got the full height of this pixel
                 for (int j = ix1; j <= ix2 && j < inCols; j++) {
                     if (j == ix1)
-                        { factorx = fx1; }  // We've just got the right edge of this pixel
+                    { factorx = fx1; }  // We've just got the right edge of this pixel
                     else if (j == ix2)
-                        { factorx = fx2; } // We've just got the left edge of this pixel
+                    { factorx = fx2; } // We've just got the left edge of this pixel
                     else
-                        { factorx = 1.0f; } // We've got the full width of this pixel
+                    { factorx = 1.0f; } // We've got the full width of this pixel
 
                     pixVal += data[j + i * inCols] * factorx * factory;
                 }
@@ -371,9 +371,9 @@ void matrix_downsample_simple(const int inCols, const int inRows, const float* c
 
 void matrix_downsample(const int inCols, const int inRows, const float* const data, float* const res) {
     if (inCols % 2 == 0 && inRows % 2 == 0)
-        { matrix_downsample_simple(inCols, inRows, data, res); }
+    { matrix_downsample_simple(inCols, inRows, data, res); }
     else
-        { matrix_downsample_full(inCols, inRows, data, res); }
+    { matrix_downsample_full(inCols, inRows, data, res); }
 }
 
 // return = a + b
@@ -626,11 +626,11 @@ pyramid_t* pyramid_allocate(int cols, int rows) {
 
         level->prev = prev;
         if (prev != NULL)
-            { prev->next = level; }
+        { prev->next = level; }
         prev = level;
 
         if (pyramid == NULL)
-            { pyramid = level; }
+        { pyramid = level; }
 
         rows /= 2;
         cols /= 2;
@@ -672,7 +672,7 @@ inline void calculate_gradient(const int COLS, const int ROWS, const float* cons
     Gy[ROWS * COLS - 1] = 0.0f;
 }
 
-void swap_pointers(float* &pOne, float* &pTwo) {
+void swap_pointers(float*& pOne, float*& pTwo) {
     float* pTemp = pOne;
     pOne = pTwo;
     pTwo = pTemp;
@@ -970,7 +970,7 @@ void lincg(pyramid_t* pyramid, pyramid_t* pC, const float* const b, float* const
         // Exit if we're done
         // fprintf(stderr, "iter:%d err:%f\n", iter+1, sqrtf(rdotr/bnrm2));
         if (rdotr_curr / bnrm2 < tol2)
-            { break; }
+        { break; }
 
         if (num_backwards > num_backwards_ceiling) {
             // Reset
@@ -1190,7 +1190,7 @@ void lincg(pyramid_t* pyramid, pyramid_t* pC, const float* const b, float* const
 // in_tab and out_tab should contain inccreasing float values
 inline float lookup_table(const int n, const float* const in_tab, const float* const out_tab, const float val) {
     if ((val < in_tab[0]))
-        { return out_tab[0]; }
+    { return out_tab[0]; }
 
     for (int j = 1; j < n; ++j) {
         if (val < in_tab[j]) {
@@ -1289,10 +1289,10 @@ inline void pyramid_gradient_multiply(pyramid_t* pyramid, const float val) {
 
 int sort_float(const void* const v1, const void* const v2) {
     if (*((float*)v1) < * ((float*)v2))
-        { return -1; }
+    { return -1; }
 
     if ((*((float*)v1) > *((float*)v2)))
-        { return 1; }
+    { return 1; }
 
     return 0;
 }
